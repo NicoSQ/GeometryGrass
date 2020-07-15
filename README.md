@@ -1,5 +1,5 @@
     #ProcedualGrass
-        [Range(0, 1000)]
+    [Range(0, 1000)]
     public int terrainSize = 250;          //地形大小
     [Range(0, 100f)]
     public float terrainHeight = 10f;          //地形高度 
