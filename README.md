@@ -1,13 +1,22 @@
     #ProcedualGrass
     [Range(0, 1000)]
     public int terrainSize = 250;          //地形大小
+    [Range(0, 100f)]
+    public float terrainHeight = 10f;          //地形高度 
     public Material terrainMat;          //地形材质
+
+    [Range(1f, 100f)]
+    public float scaleFatter = 10f;          //地形缩放
+    [Range(1f, 100f)]
+    public float offsetFatter = 10f;          //地形偏移
 
     List<Vector3> vertexs = new List<Vector3>();          //顶点列表，存储网格顶点信息
     List<int> triangles = new List<int>();          //三角形面列表，存储网格三角形信息
+    float[,] perlinNoise;          //存储每个顶点的高度值
 
     void Start()
     {
+        perlinNoise = new float[terrainSize, terrainSize];
         GenerateTerrain();
     }
 
@@ -18,7 +27,10 @@
         {
             for (int j = 0; j < terrainSize; j++)
             {
-                vertexs.Add(new Vector3(i, 0, j));
+                float noiseHeight = GeneratePerlinNoise(i, j);
+                perlinNoise[i, j] = noiseHeight;
+
+                vertexs.Add(new Vector3(i, noiseHeight * terrainHeight, j));
 
                 //不算上坐标轴的顶点
                 if (i == 0 || j == 0)
@@ -33,6 +45,15 @@
                 triangles.Add(terrainSize * i + j);
             }
         }
+    }
+
+    //生成地形高度的随机 Perlin 值
+    float GeneratePerlinNoise(int i, int j)
+    {
+        float xCoord = (float)i / terrainSize * scaleFatter + offsetFatter;
+        float zCoord = (float)j / terrainSize * scaleFatter + offsetFatter;
+
+        return Mathf.PerlinNoise(xCoord, zCoord);
     }
 
     //生成地形网格数据
@@ -68,7 +89,6 @@
         //输入网格三角面数据
         groundMesh.triangles = triangles.ToArray();
         groundMesh.uv = uvs;
-        //为了得到正确的光照需要重新计算得到正确的法线信息
         groundMesh.RecalculateNormals();
         Myterrain.GetComponent<MeshFilter>().mesh = groundMesh;
         collider.sharedMesh = groundMesh;
