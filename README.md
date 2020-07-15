@@ -1,4 +1,4 @@
-    #ProcedualGrass
+    #ProceduralGrass
     [Range(0, 1000)]
     public int terrainSize = 250;          //地形大小
     public Material terrainMat;          //地形材质
