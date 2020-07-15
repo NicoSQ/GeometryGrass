@@ -89,6 +89,7 @@
         //输入网格三角面数据
         groundMesh.triangles = triangles.ToArray();
         groundMesh.uv = uvs;
+        //为了得到正确的光照需要重新计算得到正确的法线信息
         groundMesh.RecalculateNormals();
         Myterrain.GetComponent<MeshFilter>().mesh = groundMesh;
         collider.sharedMesh = groundMesh;
