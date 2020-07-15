@@ -1,9 +1,12 @@
     #ProcedualGrass
-    [Range(0, 1000)]
+        [Range(0, 1000)]
     public int terrainSize = 250;          //地形大小
     [Range(0, 100f)]
     public float terrainHeight = 10f;          //地形高度 
     public Material terrainMat;          //地形材质
+
+    private float xOffset;
+    private float zOffset;
 
     [Range(1f, 100f)]
     public float scaleFatter = 10f;          //地形缩放
@@ -16,6 +19,9 @@
 
     void Start()
     {
+        xOffset = transform.position.x;
+        zOffset = transform.position.z;
+
         perlinNoise = new float[terrainSize, terrainSize];
         GenerateTerrain();
     }
@@ -50,8 +56,8 @@
     //生成地形高度的随机 Perlin 值
     float GeneratePerlinNoise(int i, int j)
     {
-        float xCoord = (float)i / terrainSize * scaleFatter + offsetFatter;
-        float zCoord = (float)j / terrainSize * scaleFatter + offsetFatter;
+        float xCoord = (float)(i + xOffset) / terrainSize * scaleFatter + offsetFatter;
+        float zCoord = (float)(j + zOffset) / terrainSize * scaleFatter + offsetFatter;
 
         return Mathf.PerlinNoise(xCoord, zCoord);
     }
@@ -72,6 +78,7 @@
         //MeshFilter 存储物体的网格信息
         //MeshRenderer 负责接收这些信息并把这些信息渲染出来
         GameObject Myterrain = new GameObject("Terrain0");
+        Myterrain.transform.position = this.gameObject.transform.position;
         Myterrain.AddComponent<MeshFilter>();
         MeshRenderer renderer = Myterrain.AddComponent<MeshRenderer>();
         //开启地面的阴影投射和接受
