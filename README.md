@@ -16,6 +16,7 @@
     List<Vector3> vertexs = new List<Vector3>();          //网格顶点信息
     List<int> triangles = new List<int>();          //网格三角形信息
     float[,] perlinNoise;          //存储每个顶点的高度值
+    Vector3[] terrainNormals;          //存储地形的顶点法线
     #endregion
 
     #region Grass Data
@@ -24,8 +25,10 @@
     [Range(1, 1000)]
     public int grassCountPerPatch = 100;          //定义每一堆 草根集 的草密度
     public Material grassMat;           //草的材质
-    List<Vector3> grassVerts = new List<Vector3>();          //存储草的顶点
     public Mesh grassMesh;          //草的网格
+    List<Vector3> grassVerts = new List<Vector3>();          //存储草的顶点
+    Vector3[] grassNormals;          //存储草的顶点法线
+    List<Vector3> grassNormalList = new List<Vector3>();          //存储草的顶点法线列表
     #endregion
 
     void Start()
@@ -33,6 +36,7 @@
         xOffset = transform.position.x;
         zOffset = transform.position.z;
 
+        terrainNormals = new Vector3[terrainSize * terrainSize];
         perlinNoise = new float[terrainSize, terrainSize];
         GenerateTerrain();
         GenerateGrassArea(grassRowCount, grassCountPerPatch);
@@ -110,6 +114,7 @@
         groundMesh.uv = uvs;
         //为了得到正确的光照需要重新计算得到正确的法线信息
         groundMesh.RecalculateNormals();
+        terrainNormals = groundMesh.normals;
         Myterrain.GetComponent<MeshFilter>().mesh = groundMesh;
         collider.sharedMesh = groundMesh;
 
@@ -119,7 +124,7 @@
     //生成草的网格数据
     void GenerateGrassArea(int rowCount, int perPatchSize)
     {
-        //Unity 一个网格能包含的最大顶点数为 65535
+        //最大顶点数为 65535
         List<int> indices = new List<int>();
         for (int i = 0; i < 65000; i++)
         {
@@ -148,7 +153,6 @@
         //生成 GrassLayer 物体来存储草数据
         GameObject grassLayer;
         MeshFilter grassMeshFilter;
-        //Mesh grassMesh;
         MeshRenderer grassMeshRenderer;
         int a = 0;
 
@@ -158,6 +162,14 @@
         {
             grassMesh = new Mesh();
             grassMesh.vertices = grassVerts.GetRange(0, 65000).ToArray();
+
+            //存储每个草顶点的法线（当顶点超过 65000个）
+            grassNormals = new Vector3[65000];
+            grassNormalList.GetRange(0, 65000);
+            for (int i = 0; i < 65000; i++)
+            {
+                grassNormals[i] = grassNormalList[i];
+            }
 
             //设置子网格的索引缓冲区,相关官方文档：https://docs.unity3d.com/ScriptReference/Mesh.SetIndices.html
             //每一个创建的网格的顶点数目不会超过 65000 个
@@ -175,6 +187,9 @@
             grassMeshFilter.mesh = grassMesh;
             //移除前 65000 个顶点
             grassVerts.RemoveRange(0, 65000);
+
+            //移除前 65000 个法线信息
+            grassNormalList.RemoveRange(0, 65000);
         }
 
         //当 grassVerts.Count 的数量即草的全部顶点数没有超过 65000 个时
@@ -189,6 +204,15 @@
         grassMesh.vertices = grassVerts.ToArray();
         //设立子网格数据
         grassMesh.SetIndices(indices.GetRange(0, grassVerts.Count).ToArray(), MeshTopology.Points, 0);
+        
+        //存储每个草顶点的法线（当顶点没有超过 65000个）
+        grassNormals = new Vector3[grassMesh.vertexCount];
+        grassNormalList.GetRange(0, grassMesh.vertexCount);
+        for (int i = 0; i < grassMesh.vertexCount; i++)
+        {
+            grassNormals[i] = grassNormalList[i];
+        }
+        grassMesh.normals = grassNormals;
         
         grassMeshFilter.mesh = grassMesh;
         grassMeshRenderer.sharedMaterial = grassMat;
@@ -221,5 +245,7 @@
 
             //添加每一个草的顶点位置到 grassVert 列表里
             grassVerts.Add(new Vector3(vertPos.x + randomX, perlinNoise[indexX, indexZ] * terrainHeight, vertPos.z + randomZ));
+            //添加每一个草的顶点法线到 grassNormalList 列表里
+            grassNormalList.Add(terrainNormals[indexX]);
         }
     }
