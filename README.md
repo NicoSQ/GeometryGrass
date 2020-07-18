@@ -184,6 +184,7 @@
             grassMeshRenderer.receiveShadows = false;
             grassMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             grassMeshRenderer.sharedMaterial = grassMat;
+            grassMesh.normals = grassNormals;
             grassMeshFilter.mesh = grassMesh;
             //移除前 65000 个顶点
             grassVerts.RemoveRange(0, 65000);
